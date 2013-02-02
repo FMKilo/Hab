@@ -1,4 +1,4 @@
-module Write (write, privmsg) where
+module Write (write, privmsg, pass) where
 
 import Control.Monad.Reader
 import Text.Printf
@@ -16,3 +16,6 @@ write s t = do
 -- Wrap write up as a private message
 privmsg :: String -> Net ()  	
 privmsg s = write "PRIVMSG" (chan ++ " :" ++ s)
+
+pass :: String -> Net ()
+pass s = write s ""

@@ -12,7 +12,7 @@ port = 6667
 chan = "#KF2-dev"
 nick = "FMKilo-bot"
 realname = "FMKilo"
-deftopic = "TWEEZERMOD IS GOD!!! CABLELESS FTW!!! com.powerpoint45.FMKilo!!! MooRom!!! COMMUNAL BATHS FTW!!! KLP ROM FOR KF2? HASHFIRE!!! NO BRONIES ALLOWED!!! ON ENTRY, SAY, 'hello FMKilo-bot'"
+deftopic = "TWEEZERMOD IS GOD!!! CABLELESS FTW!!! com.powerpoint45.FMKilo!!! MooRom!!! COMMUNAL BATHS FTW!!! KLP ROM FOR KF2? HASHFIRE!!! NO BRONIES ALLOWED!!! ON ENTRY, SAY, 'Hello FMKilo-bot' BEWARE THE LOLKICK"
 source = "https://github.com/FMKilo/Hab/commits/master"
 
 -- Thread our socket actions through a Net monad
