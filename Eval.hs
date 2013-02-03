@@ -9,16 +9,13 @@ import Write
 
 -- Evaluate a command
 --
--- SndNick -> SndFrom (channel/privchat etc) -> msgtype -> content (command)
+-- SndNick -> origin (channel/privchat etc) -> msgtype -> content (command)
 eval :: String -> String -> String -> String -> Net ()
 
 --Commands
 -- Master commands: only the owner
 eval "FMKilo" "FMKilo-bot" "PRIVMSG" "!quit" = write "QUIT" ":Reloading, hopefully..." >> io (exitWith ExitSuccess)
 eval "FMKilo" _ _ "!deftopic" = write ("TOPIC "++chan) (" :"++deftopic)
---Guess I gotta modify Listen.hs for this to work. 
---eval _ _ _ x
---    | "MODE #kf2-dev -o FMKilo-bot" `isPrefixOf` x = write "PRIVMSG chanserv :op #kf2-dev FMKilo-bot" (drop 27 x)
 eval y _ _ x
     | "!deop FMKilo" `isPrefixOf` x = return ()
     | "!kick #kf2-dev FMKilo" `isPrefixOf` x = return ()
@@ -101,7 +98,7 @@ eval "FMKilo-otter2-cm" _ _ x
 -- :FMKilo-bot!~FMKilo-bo@ KICK #kf2-dev FMKilo-bot :NO LOL IN MY CHAN
 -- > KICK #kf2-dev FMKilo-bot :NO LOL IN MY CHAN
 -- :zelazny.freenode.net 442 FMKilo-bot #kf2-dev :You're not on that channel
-eval "FMKilo-otter2-cm" _ _ x
+eval "IngCr3at1on" _ _ x
     | "l○l" `isInfixOf` x = return ()
     | "lol" `isInfixOf` x = return ()
     | "Lol" `isInfixOf` x = return ()
@@ -112,7 +109,6 @@ eval "FMKilo-otter2-cm" _ _ x
     | "L O L" `isInfixOf` x = return ()
     | "LOl" `isInfixOf` x = return ()
     | "L O l" `isInfixOf` x = return ()
-eval "IngCr3at1on" _ _ x
     | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
     | "!id " `isPrefixOf` x = privmsg (drop 4 x)
     | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
@@ -193,3 +189,14 @@ eval y "#kf2-dev" "PRIVMSG" x
     | "!source" `isPrefixOf` x = write "PRIVMSG" ("#kf2-dev :"++source)
 eval _ _ _ "You're not on that channel" = pass ("JOIN "++chan)
 eval _ _ _ _ = return () -- ignore everything else
+
+
+
+
+
+
+
+
+--call :: String -> String -> String -> Net ()
+--call "#kf2-dev" "MODE" "#kf2-dev -o FMKilo-bot" = pass "PRIVMSG Chanserv :op FMKilo-bot" 
+--call "#kf2-dev" "KICK" "#kf2-dev FMKilo-bot" = pass "JOIN #kf2-dev"
