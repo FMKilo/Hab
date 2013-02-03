@@ -15,17 +15,22 @@ listen :: Handle -> Net ()
 listen h = forever $ do
     s <- init `fmap` io (hGetLine h)
     io (putStrLn s)
-    if ping s
+    if ping s 
         then pong s
---            else if  "MODE" `isInfixOf` (words s !! 2)
---                then call (origin s) (msgtype s) (raw s)
-            else eval (sndnick s) (origin s) (msgtype s) (content s)
+        else if modechange s
+            then evalmode (origin s) (modetype s) (modwho s)
+        else if kick s
+            then rejoin (origin s)
+        else eval (sndnick s) (origin s) (msgtype s) (content s)
   where
-    forever a = a >> forever a
-    sndnick = drop 1 . takeWhile (/= '!')
-    origin = (!! 2) . words
-    msgtype = (!! 1) . words 
     content = drop 1 . dropWhile (/= ':') . drop 1
---    raw = dropWhile (/= '#')
-    ping x	= "PING :" `isPrefixOf` x
-    pong x	= write "PONG" (':' : drop 6 x)
+    forever a = a >> forever a
+    kick x = "KICK" `isInfixOf` (msgtype x)
+    msgtype = (!! 1) . words
+    modwho = (!! 4) . words
+    modechange x = "MODE" `isInfixOf` (msgtype x)
+    modetype = (!! 3) . words
+    origin = (!! 2) . words
+    ping x = "PING :" `isPrefixOf` x
+    pong x = write "PONG" (':' : drop 6 x)
+    sndnick = drop 1 . takeWhile (/= '!')

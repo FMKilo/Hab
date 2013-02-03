@@ -1,4 +1,4 @@
-module Eval (eval) where
+module Eval (eval, evalmode, rejoin) where
 
 import Data.List
 import System.Exit
@@ -7,20 +7,25 @@ import System.Exit
 import Socket
 import Write
 
+-- Define any strings that we use on a regular basis (links etc)
+-- should really go in a resource file rather than hard coded into the source
+clilink = "http://terokarvinen.com/command_line.html"
+udevsetup = "http://forum.xda-developers.com/showthread.php?t=1475740"
+
 -- Evaluate a command
---
 -- SndNick -> origin (channel/privchat etc) -> msgtype -> content (command)
 eval :: String -> String -> String -> String -> Net ()
 
 --Commands
 -- Master commands: only the owner
-eval "FMKilo" "FMKilo-bot" "PRIVMSG" "!quit" = write "QUIT" ":Reloading, hopefully..." >> io (exitWith ExitSuccess)
-eval "FMKilo" _ _ "!deftopic" = write ("TOPIC "++chan) (" :"++deftopic)
+eval "FMKilo" "FMKilo-bot" "PRIVMSG" "~quit" = write "QUIT" ":Reloading, hopefully..." >> io (exitWith ExitSuccess)
+eval "FMKilo" _ _ "~deftopic" = write ("TOPIC "++chan) (" :"++deftopic)
 eval y _ _ x
-    | "!deop FMKilo" `isPrefixOf` x = return ()
-    | "!kick #kf2-dev FMKilo" `isPrefixOf` x = return ()
+    | "~deop FMKilo" `isPrefixOf` x = return ()
+    | "~kick #kf2-dev FMKilo" `isPrefixOf` x = return ()
 -- Commands specific to one nick. (Nick is case sensative.)
 eval "FMKilo" _ _ x
+    | "~commands" `isInfixOf` x = listadcom "FMKilo"
     | "l○l" `isInfixOf` x = return ()
     | "lol" `isInfixOf` x = return ()
     | "Lol" `isInfixOf` x = return ()
@@ -31,21 +36,22 @@ eval "FMKilo" _ _ x
     | "L O L" `isInfixOf` x = return ()
     | "LOl" `isInfixOf` x = return ()
     | "L O l" `isInfixOf` x = return ()
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!part " `isPrefixOf` x = write "PART" (drop 6 x)
-    | "!topic " `isPrefixOf` x = write ("TOPIC "++chan) (drop 7 x)
-    | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
-    | "!nick " `isPrefixOf` x = write "NICK " (drop 6 x)
-    | "!ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
-    | "!unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
-    | "!pass " `isPrefixOf` x = pass (drop 6 x)
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~part " `isPrefixOf` x = write "PART" (drop 6 x)
+    | "~topic " `isPrefixOf` x = write ("TOPIC "++chan) (drop 7 x)
+    | "~me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~nick " `isPrefixOf` x = write "NICK " (drop 6 x)
+    | "~ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
+    | "~unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
+    | "~pass " `isPrefixOf` x = pass (drop 6 x)
 eval "FMKilo-d2usc" _ _ x
+    | "~commands" `isInfixOf` x = listadcom "FMKilo-d2usc"
     | "l○l" `isInfixOf` x = return ()
     | "lol" `isInfixOf` x = return ()
     | "Lol" `isInfixOf` x = return ()
@@ -56,19 +62,20 @@ eval "FMKilo-d2usc" _ _ x
     | "L O L" `isInfixOf` x = return ()
     | "LOl" `isInfixOf` x = return ()
     | "L O l" `isInfixOf` x = return ()
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!part " `isPrefixOf` x = write "PART" (drop 6 x)
-    | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
-    | "!topic " `isPrefixOf` x = write ("TOPIC "++chan) (" :"++drop 7 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo-d2usc"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
-    | "!ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
-    | "!unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~part " `isPrefixOf` x = write "PART" (drop 6 x)
+    | "~me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
+    | "~topic " `isPrefixOf` x = write ("TOPIC "++chan) (" :"++drop 7 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo-d2usc"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
+    | "~unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
 eval "FMKilo-otter2-cm" _ _ x
+    | "~commands" `isInfixOf` x = listadcom "FMKilo-otter2-cm"
     | "l○l" `isInfixOf` x = return ()
     | "lol" `isInfixOf` x = return ()
     | "Lol" `isInfixOf` x = return ()
@@ -79,18 +86,18 @@ eval "FMKilo-otter2-cm" _ _ x
     | "L O L" `isInfixOf` x = return ()
     | "LOl" `isInfixOf` x = return ()
     | "L O l" `isInfixOf` x = return ()
-    | "!topic " `isPrefixOf` x = write ("TOPIC "++chan) (drop 7 x)
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
-    | "!part " `isPrefixOf` x = write "PART" (drop 6 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo-otter1-cm"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
-    | "!ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
-    | "!unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
+    | "~topic " `isPrefixOf` x = write ("TOPIC "++chan) (drop 7 x)
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
+    | "~part " `isPrefixOf` x = write "PART" (drop 6 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o FMKilo-otter1-cm"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
+    | "~unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
 -- The bot was kickingitself after adding the infix part... hmmm, this intrigues me.... ex::FMKilo-otter2-cm!~FMKilo@ PRIVMSG #kf2-dev : lol
 -- > KICK #kf2-dev FMKilo-otter2-cm :NO LOL IN MY CHAN
 -- :FMKilo-bot!~FMKilo-bo@ KICK #kf2-dev FMKilo-otter2-cm :NO LOL IN MY CHAN
@@ -99,6 +106,7 @@ eval "FMKilo-otter2-cm" _ _ x
 -- > KICK #kf2-dev FMKilo-bot :NO LOL IN MY CHAN
 -- :zelazny.freenode.net 442 FMKilo-bot #kf2-dev :You're not on that channel
 eval "IngCr3at1on" _ _ x
+    | "~commands" `isInfixOf` x = listadcom "IngCr3at1on"
     | "l○l" `isInfixOf` x = return ()
     | "lol" `isInfixOf` x = return ()
     | "Lol" `isInfixOf` x = return ()
@@ -109,43 +117,46 @@ eval "IngCr3at1on" _ _ x
     | "L O L" `isInfixOf` x = return ()
     | "LOl" `isInfixOf` x = return ()
     | "L O l" `isInfixOf` x = return ()
-    | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o IngCr3at1on"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
-    | "!ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
-    | "!unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
+    | "~me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o IngCr3at1on"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~ban " `isPrefixOf` x = write "MODE #kf2-dev +b " (drop 5 x)
+    | "~unban " `isPrefixOf` x = write "MODE #kf2-dev -b " (drop 7 x)
 eval "iytrix" _ _ x
-    | "!me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o iytrix"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~commands" `isInfixOf` x = listadcom "iytrix"
+    | "~me " `isPrefixOf` x = privmsg ("\001ACTION "++(drop 4 x)++"\001")
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o iytrix"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
 eval "powerpoint45" _ _ x
-    | "!me " `isPrefixOf` x = privmsg "\001ACTION slaps powerpoint45\001"
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o powerpoint45"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~commands" `isInfixOf` x = listadcom "powerpoint45"
+    | "~me " `isPrefixOf` x = privmsg "\001ACTION slaps powerpoint45\001"
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o powerpoint45"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
 eval "ppt45" _ _ x
-    | "!me " `isPrefixOf` x = privmsg "\001ACTION slaps ppt45!\001"
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "!join " `isPrefixOf` x = write "JOIN" (drop 6 x)
-    | "!kick " `isPrefixOf` x = write "KICK" (drop 6 x)
-    | "!msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
-    | "!opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o ppt45"
-    | "!op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
-    | "!deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
+    | "~commands" `isInfixOf` x = listadcom "ppt45"
+    | "~me " `isPrefixOf` x = privmsg "\001ACTION slaps ppt45!\001"
+    | "~id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "~join " `isPrefixOf` x = write "JOIN" (drop 6 x)
+    | "~kick " `isPrefixOf` x = write "KICK" (drop 6 x)
+    | "~msg " `isPrefixOf` x = write "PRIVMSG" (drop 5 x)
+    | "~opme" `isPrefixOf` x = write "MODE" "#kf2-dev +o ppt45"
+    | "~op " `isPrefixOf` x = write "MODE #kf2-dev +o " (drop 4 x)
+    | "~deop " `isPrefixOf` x = write "MODE #kf2-dev -o " (drop 6 x)
 eval "ppt45" _ _ "..." = privmsg "He understands..."
 eval "powerpoint45" _ _ "..." = privmsg "He understands..."
 
@@ -186,17 +197,45 @@ eval y "#kf2-dev" "PRIVMSG" x
     | "L O L" `isInfixOf` x = write "KICK" ("#kf2-dev "++y ++" :NO LOL IN MY CHAN")
     | "LOl" `isInfixOf` x = write "KICK" ("#kf2-dev "++y ++" :NO LOL IN MY CHAN")
     | "L O l" `isInfixOf` x = write "KICK" ("#kf2-dev "++y ++" :NO LOL IN MY CHAN")
-    | "!source" `isPrefixOf` x = write "PRIVMSG" ("#kf2-dev :"++source)
 eval _ _ _ "You're not on that channel" = pass ("JOIN "++chan)
+-- Evaluate private messages (only neccessary if a response is required)
+eval y "FMKilo-bot" _ x
+    | "!adb" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!cli" `isInfixOf` x = write "PRIVMSG" (y++" :"++clilink)
+    | "!commands" `isInfixOf` x = listcom y
+    | "!fastboot" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!source" `isInfixOf` x = write "PRIVMSG" (y++" :"++source)
+    | "!udev" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+
+-- Respond to everyone...
+
+-- resopond to the channel we received the message on (this doesn't work w/
+-- private messages; yet, I have an idea just lazy)
+eval y "FMKilo-bot" _ x
+    | "!adb" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!cli" `isInfixOf` x = write "PRIVMSG" (y++" :"++clilink)
+    | "!commands" `isInfixOf` x = listcom y
+    | "!fastboot" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!source" `isInfixOf` x = write "PRIVMSG" (y++" :"++source)
+    | "!udev" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+eval _ y _ x
+    | "!adb" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!cli" `isInfixOf` x = write "PRIVMSG" (y++" :"++clilink)
+    | "!commands" `isInfixOf` x = listcom y
+    | "!fastboot" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+    | "!source" `isInfixOf` x = write "PRIVMSG" (y++" :"++source)
+    | "!udev" `isInfixOf` x = write "PRIVMSG" (y++" :"++udevsetup)
+
 eval _ _ _ _ = return () -- ignore everything else
 
+-- Evaluate a MODE change
+--  origin -> modetype (voice, etc) -> modwho (changes whos mode?)
+evalmode :: String -> String -> String -> Net ()
+-- I forgot why you wanted this FMKilo...
+-- Finish it and export it, than uncomment the Modechange in listen.
+evalmode c "-o" "FMKilo-bot" = pass ("PRIVMSG ChanServ :op "++c++" "++nick) 
+evalmode _ _ _ = return ()
 
-
-
-
-
-
-
---call :: String -> String -> String -> Net ()
---call "#kf2-dev" "MODE" "#kf2-dev -o FMKilo-bot" = pass "PRIVMSG Chanserv :op FMKilo-bot" 
---call "#kf2-dev" "KICK" "#kf2-dev FMKilo-bot" = pass "JOIN #kf2-dev"
+-- Rejoin a channel that we were kicked from
+rejoin :: String -> Net ()
+rejoin x = write "JOIN" x

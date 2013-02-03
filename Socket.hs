@@ -1,4 +1,4 @@
-module Socket (server, port, chan, nick, realname, deftopic, source, Bot(socket), Net, connect, io) where
+module Socket (server, port, chan, altchan, nick, realname, deftopic, source, Bot(socket), Net, connect, io) where
 
 import Control.Exception
 import Control.Monad.Reader
@@ -10,6 +10,7 @@ import Text.Printf
 server = "irc.freenode.org"
 port = 6667
 chan = "#KF2-dev"
+altchan = "#kindlefire-dev,#projectopencannibal"
 nick = "FMKilo-bot"
 realname = "FMKilo"
 deftopic = "TWEEZERMOD IS GOD!!! CABLELESS FTW!!! com.powerpoint45.FMKilo!!! MooRom!!! COMMUNAL BATHS FTW!!! KLP ROM FOR KF2? HASHFIRE!!! NO BRONIES ALLOWED!!! ON ENTRY, SAY, 'Hello FMKilo-bot' BEWARE THE LOLKICK"
