@@ -13,7 +13,7 @@ clilink = "http://terokarvinen.com/command_line.html"
 udevsetup = "http://forum.xda-developers.com/showthread.php?t=1475740"
 
 -- Define admins and gods (gods have quit and op assignment controls)
-lols =  ["l○l", "lol", "Lol", "LOL", "LOl", "el oh el", "l o l", "l0l", "L O L", "L O l"]
+lols =  ["l○l", "lol", "Lol", "LOL", "LOl", "l0l"]
 lolblock = ["FMKilo", "FMKilo-d2usc", "FMKilo-otter2-cm", "IngCr3at1on"]
 gods = ["FMKilo", "FMKilo-d2usc", "FMKilo-otter2-cm"]
 admins = ["FMKilo", "IngCr3at1on", "iytrix", "powerpoint45", "ppt45"]
@@ -166,7 +166,7 @@ evalchancmd u "#kf2-dev" c = do
         else return ()
   where
      isLolblock x = x `elem` lolblock
-     isLol x = x `elem` lols
+     isLol x = any (`elem` lols) (words x)
 evalchancmd _ _ _ = return ()
 -- Evaluate a MODE change
 --  origin -> modetype (voice, etc) -> modwho (changes whos mode?)
