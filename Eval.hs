@@ -13,7 +13,9 @@ clilink = "http://terokarvinen.com/command_line.html"
 udevsetup = "http://forum.xda-developers.com/showthread.php?t=1475740"
 
 -- Define admins and gods (gods have quit and op assignment controls)
-gods = "FMKilo, FMKilo-d2usc, FMKilo-otter2-cm, IngCr3at1on"
+lols =  "l○l, lol, Lol, LOL, LOl, el oh el, l o l, l0l, L O L, L O l"
+lolblock = "FMKilo, FMKilo-d2usc, FMKilo-otter2-cm, IngCr3at1on"
+gods = "FMKilo, FMKilo-d2usc, FMKilo-otter2-cm"
 admins = "FMKilo, IngCr3at1on, iytrix, powerpoint45, ppt45"
 
 -- Evaluate a command
@@ -57,16 +59,16 @@ evalgodcmd u c
     | "~ban " `isPrefixOf` c = write "MODE #kf2-dev +b " (drop 5 c)
     | "~unban " `isPrefixOf` c = write "MODE #kf2-dev -b " (drop 7 c)
     | "~pass " `isPrefixOf` c = pass (drop 6 c)
-    | "l○l" `isInfixOf` c = return ()
-    | "lol" `isInfixOf` c = return ()
-    | "Lol" `isInfixOf` c = return ()
-    | "LOL" `isInfixOf` c = return ()
-    | "el oh el" `isInfixOf` c = return ()
-    | "l o l" `isInfixOf` c = return ()
-    | "l0l" `isInfixOf` c = return ()
-    | "L O L" `isInfixOf` c = return ()
-    | "LOl" `isInfixOf` c = return ()
-    | "L O l" `isInfixOf` c = return ()
+--    | "l○l" `isInfixOf` c = return ()
+--    | "lol" `isInfixOf` c = return ()
+--    | "Lol" `isInfixOf` c = return ()
+--    | "LOL" `isInfixOf` c = return ()
+--    | "el oh el" `isInfixOf` c = return ()
+--    | "l o l" `isInfixOf` c = return ()
+--    | "l0l" `isInfixOf` c = return ()
+ --   | "L O L" `isInfixOf` c = return ()
+  --  | "LOl" `isInfixOf` c = return ()
+   -- | "L O l" `isInfixOf` c = return ()
 evalgodcmd _ _ = return ()
 -- Evaluate admin commands
 --
@@ -154,24 +156,25 @@ evalchancmd u "#kf2-dev" c
     | "What is the answer to life the universe and everything?" `isPrefixOf` c = write "PRIVMSG" "#kf2-dev :forty-two"
     | "What is the answer to life, the universe, and everything?" `isPrefixOf` c = write "PRIVMSG" "#kf2-dev :forty-two"
     | "What is the answer to the ultimate question of life, the universe, and everything?" `isPrefixOf` c = write "PRIVMSG" "#kf2-dev :forty-two"
-     | "l○l" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "lol" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "Lol" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "LOL" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "el oh el" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "l o l" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "l0l" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "L O L" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "LOl" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-    | "L O l" `isInfixOf` c = write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
 evalchancmd "ppt45" "kf2-dev" "..." = privmsg "He understands..."
 evalchancmd "powerpoint45" "kf2-dev" "..." = privmsg "He understands..."
+evalchancmd u "#kf2-dev" c = do
+    if isLolblock u
+        then return ()
+        else if isLol c
+            then write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
+        else return ()
+  where
+     isLolblock x = x `isInfixOf` lolblock
+     isLol x = x `isInfixOf` lols
 evalchancmd _ _ _ = return ()
-
 -- Evaluate a MODE change
 --  origin -> modetype (voice, etc) -> modwho (changes whos mode?)
 evalmode :: String -> String -> String -> Net ()
 evalmode c "-o" "FMKilo-bot" = pass ("PRIVMSG ChanServ :op "++c++" "++nick)
+evalmode c "-o" "FMKilo" = pass ("PRIVMSG ChanServ :op "++c++" FMKilo")
+evalmode c "-o" "FMKilo-otter2-cm" = pass ("PRIVMSG ChanServ :op "++c++" FMKilo-otter2-cm")
+evalmode c "-o" "FMKilo-d2usc" = pass ("PRIVMSG ChanServ :op "++c++" FMKilo-d2usc")
 evalmode _ _ _ = return ()
 -- Check who was kicked and if it was the bot, rejoin the channel in question	
 mayberejoin :: String -> Net ()	
@@ -180,6 +183,6 @@ mayberejoin s = do
         then write "JOIN" (origin s)
         else return ()
   where
-    check x = "Hab" `isInfixOf` (whois s)
+    check x = "FMKilo-bot" `isInfixOf` (whois s)
     origin = (!! 2) . words
     whois = (!! 3) . words
