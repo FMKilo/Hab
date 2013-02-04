@@ -158,15 +158,15 @@ evalchancmd u "#kf2-dev" c
     | "What is the answer to the ultimate question of life, the universe, and everything?" `isPrefixOf` c = write "PRIVMSG" "#kf2-dev :forty-two"
 evalchancmd "ppt45" "kf2-dev" "..." = privmsg "He understands..."
 evalchancmd "powerpoint45" "kf2-dev" "..." = privmsg "He understands..."
-evalchancmd u "#kf2-dev" c = do
-    if isLolblock u
-        then return ()
-        else if isLol c
-            then write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-        else return ()
-  where
-     isLolblock x = x `isInfixOf` lolblock
-     isLol x = x `isInfixOf` lols
+--evalchancmd u "#kf2-dev" c = do
+--    if isLolblock u
+  --      then return ()
+    --    else if isLol c
+      --      then write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
+        --else return ()
+  --where
+    -- isLolblock x = x `isInfixOf` lolblock
+     --isLol x = x `isInfixOf` lols
 evalchancmd _ _ _ = return ()
 -- Evaluate a MODE change
 --  origin -> modetype (voice, etc) -> modwho (changes whos mode?)
