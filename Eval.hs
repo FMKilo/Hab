@@ -13,10 +13,10 @@ clilink = "http://terokarvinen.com/command_line.html"
 udevsetup = "http://forum.xda-developers.com/showthread.php?t=1475740"
 
 -- Define admins and gods (gods have quit and op assignment controls)
-lols =  "l○l, lol, Lol, LOL, LOl, el oh el, l o l, l0l, L O L, L O l"
-lolblock = "FMKilo, FMKilo-d2usc, FMKilo-otter2-cm, IngCr3at1on"
-gods = "FMKilo, FMKilo-d2usc, FMKilo-otter2-cm"
-admins = "FMKilo, IngCr3at1on, iytrix, powerpoint45, ppt45"
+lols =  ["l○l", "lol", "Lol", "LOL", "LOl", "el oh el", "l o l", "l0l", "L O L", "L O l"]
+lolblock = ["FMKilo", "FMKilo-d2usc", "FMKilo-otter2-cm", "IngCr3at1on"]
+gods = ["FMKilo", "FMKilo-d2usc", "FMKilo-otter2-cm"]
+admins = ["FMKilo", "IngCr3at1on", "iytrix", "powerpoint45", "ppt45"]
 
 -- Evaluate a command
 --
@@ -29,8 +29,8 @@ eval u o _ c = do
             then evaladmin u o c
         else evalcmd u o c
   where
-    isAdmin x = x `isInfixOf` admins
-    isGod x = x `isInfixOf` gods
+    isAdmin x = x `elem` admins
+    isGod x = x `elem` gods
 -- Evaluate God commands (upon completion evaluate admin and standand commands)
 --
 -- SndNick -> Origin -> content (command)
@@ -158,15 +158,15 @@ evalchancmd u "#kf2-dev" c
     | "What is the answer to the ultimate question of life, the universe, and everything?" `isPrefixOf` c = write "PRIVMSG" "#kf2-dev :forty-two"
 evalchancmd "ppt45" "kf2-dev" "..." = privmsg "He understands..."
 evalchancmd "powerpoint45" "kf2-dev" "..." = privmsg "He understands..."
---evalchancmd u "#kf2-dev" c = do
---    if isLolblock u
-  --      then return ()
-    --    else if isLol c
-      --      then write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
-        --else return ()
-  --where
-    -- isLolblock x = x `isInfixOf` lolblock
-     --isLol x = x `isInfixOf` lols
+evalchancmd u "#kf2-dev" c = do
+    if isLolblock u
+        then return ()
+        else if isLol c
+            then write "KICK" ("#kf2-dev "++u ++" :NO LOL IN MY CHAN")
+        else return ()
+  where
+     isLolblock x = x `elem` lolblock
+     isLol x = x `elem` lols
 evalchancmd _ _ _ = return ()
 -- Evaluate a MODE change
 --  origin -> modetype (voice, etc) -> modwho (changes whos mode?)
